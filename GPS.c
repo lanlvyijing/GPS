@@ -38,6 +38,15 @@ const VMCHAR *next_token(const VMCHAR* src, VMCHAR* buf) {
 } 
  
 /* Parse and print GPS GGA data */
+/**************************************************************
+ *
+ * $GPGGA 语句包括17个字段：
+ * 语句标识头，世界时间，纬度，纬度半球，经度，经度半球，定位质量指示，使用卫星数量，水平精确度，海拔高度，
+ * 高度单位，大地水准面高度，高度单位，差分GPS数据期限，差分参考基站标号，
+ * 校验和结束标记(用回车符<CR>和换行符<LF>)，分别用14个逗号进行分隔
+ * ***********************************************************/
+
+
 void gps_print_gpgga(const VMCHAR* str){
 
   VMCHAR latitude[20]; 
@@ -45,7 +54,7 @@ void gps_print_gpgga(const VMCHAR* str){
   VMCHAR buf[20]; 
   const VMCHAR* p = str; 
    
-  p = next_token(p, 0); /* GGA */
+  p = next_token(p, 0); /* GGA */       //next_token找用“，”分开的字符串
   p = next_token(p, 0); /* Time */
   p = next_token(p, latitude); /* Latitude */
   p = next_token(p, 0); /* N */
@@ -71,7 +80,7 @@ void gps_print_gpgga(const VMCHAR* str){
 static void gps_callback(VM_GPS_MESSAGE message, void* data, void* user_data){
 
      switch(message){
-     case VM_GPS_OPEN_RESULT:
+     case VM_GPS_OPEN_RESULT:            //打开GPS
     {
              VMINT result = (VMINT)data;
              if(result == 1)
@@ -82,11 +91,11 @@ static void gps_callback(VM_GPS_MESSAGE message, void* data, void* user_data){
              {
                  vm_log_warn("open success");
                  /* set report period as 2 seconds */
-                 vm_gps_set_parameters(VM_GPS_SET_LOCATION_REPORT_PERIOD, 2, NULL);
+                 vm_gps_set_parameters(VM_GPS_SET_LOCATION_REPORT_PERIOD, 2, NULL);//2分钟收集一次
              }
          }
          break;
-     case VM_GPS_SENTENCE_DATA:
+     case VM_GPS_SENTENCE_DATA:          //接收GPS的汇报
          {
         	/* GPS data arriving */
             vm_gps_sentence_info_t info;
@@ -102,7 +111,7 @@ void gps_power_on(void)
 {
   VMINT result;
 
-  result = vm_gps_open( VM_GPS_ONLY, gps_callback, NULL);
+  result = vm_gps_open( VM_GPS_ONLY, gps_callback, NULL);// GPS can be enhanced with the optional support of Beidou and GLONASS
   if(result == VM_SUCCESS)
   {
       vm_log_info("GPS open success");
